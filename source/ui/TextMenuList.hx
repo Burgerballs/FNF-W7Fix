@@ -14,6 +14,7 @@ class TextMenuList extends MenuTypedList<TextMenuItem>
 	{
 		var item = new TextMenuItem(x, y, name, font, callback);
 		item.fireInstantly = fireInstantly;
+		item.ID = this.length;
 		return addItem(name, item);
 	}
 }

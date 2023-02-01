@@ -21,6 +21,19 @@ class PreferencesMenu extends ui.OptionsState.Page
 	var menuCamera:FlxCamera;
 	var camFollow:FlxObject;
 	var descText:FlxText;
+	var descs:Array<String> = 
+	[
+		"Makes it so your mom doesn't kick your ass.",
+		'Flips the scroll direction, and locates the strums to be towards the bottom.',
+		'Changes if the menu flashes when something is selected.',
+		'Changes if the camera zooms to the beat of a song',
+		'If checked it removes the jagged edges of sprites, at the cost of preformance',
+		'When checked you can press the keys without it being counted as missing',
+		'What do you expect it to do? lol',
+		'What do you expect it to do? lol',
+		'What do you expect it to do? lol',
+		'What do you expect it to do? lol'
+	];
 
 	public function new()
 	{
@@ -60,8 +73,8 @@ class PreferencesMenu extends ui.OptionsState.Page
 		var descBorder = new FlxSprite(0,0).makeGraphic(400, 720, 0x99000000);
 		add(descBorder);
 		descBorder.x = FlxG.width - descBorder.width;
-		descText = new FlxText(descBorder.x, 0, descBorder.width, 'Setting Description UI Test');
-		descText.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, RIGHT);
+		descText = new FlxText(descBorder.x, 0, descBorder.width, '');
+		descText.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, LEFT);
 		add(descText);
 		descBorder.scrollFactor.set();
 		descText.scrollFactor.set();
@@ -184,8 +197,10 @@ class PreferencesMenu extends ui.OptionsState.Page
 
 		items.forEach(function(daItem:TextMenuItem)
 		{
-			if (items.selectedItem == daItem)
+			if (items.selectedItem == daItem) {
 				daItem.x = 150;
+				descText.text = daItem.label.text + '\n\n' + descs[daItem.ID];
+			}
 			else
 				daItem.x = 120;
 		});
