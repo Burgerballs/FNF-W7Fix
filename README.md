@@ -1,6 +1,6 @@
 # W7Fix
 
-This is a version of Funkin that aims to improve the game while keeping the original feel
+This is a version of the Week 7 release Funkin' that aims to improve the game while keeping the original feel
 
 
 
