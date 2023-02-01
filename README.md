@@ -1,3 +1,11 @@
+#W7FIX
+
+This is a version of Funkin that aims to improve the game while keeping the original feel
+
+
+
+Anyways let the original description commence!
+
 # Friday Night Funkin
 
 This is the repository for Friday Night Funkin, a game originally made for Ludum Dare 47 "Stuck In a Loop".
