@@ -1,4 +1,4 @@
-#W7FIX
+# W7FIX
 
 This is a version of Funkin that aims to improve the game while keeping the original feel
 
