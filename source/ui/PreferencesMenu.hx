@@ -20,14 +20,15 @@ class PreferencesMenu extends ui.OptionsState.Page
 	var checkboxes:Array<CheckboxThingie> = [];
 	var menuCamera:FlxCamera;
 	var camFollow:FlxObject;
+	var descNameText:FlxText;
 	var descText:FlxText;
 	var descs:Array<String> = 
 	[
 		"Makes it so your mom doesn't kick your ass.",
 		'Flips the scroll direction, and locates the strums to be towards the bottom.',
 		'Changes if the menu flashes when something is selected.',
-		'Changes if the camera zooms to the beat of a song',
-		'If checked it removes the jagged edges of sprites, at the cost of preformance',
+		'Changes if the camera zooms to the beat of a song.',
+		'If checked it removes the jagged edges of sprites, at the cost of preformance.',
 		'When checked you can press the keys without it being counted as missing',
 		'What do you expect it to do? lol',
 		'What do you expect it to do? lol',
@@ -50,7 +51,7 @@ class PreferencesMenu extends ui.OptionsState.Page
 		createPrefItem('Flashing Menu', 'flashing-menu', true);
 		createPrefItem('Camera Zooming on Beat', 'camera-zoom', true);
 		createPrefItem('Anti Aliasing', 'anti-aliasing', true);
-		createPrefItem('Ghost Tapping', 'ghost-tapping', false);
+		createPrefItem('Ghost Tapping', 'ghost-tapping', true);
 		createPrefItem('FPS Counter', 'fps-counter', true);
 		createPrefItem('Memory Counter', 'mem-counter', true);
 		createPrefItem('Counters for Debugging', 'debug-counters', true);
@@ -73,10 +74,15 @@ class PreferencesMenu extends ui.OptionsState.Page
 		var descBorder = new FlxSprite(0,0).makeGraphic(400, 720, 0x99000000);
 		add(descBorder);
 		descBorder.x = FlxG.width - descBorder.width;
-		descText = new FlxText(descBorder.x, 0, descBorder.width, '');
-		descText.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, LEFT);
+		descNameText = new FlxText(descBorder.x, 0, descBorder.width, '');
+		descNameText.setFormat(Paths.font("vcr.ttf"), 36, FlxColor.WHITE, LEFT);
+		add(descNameText);
+
+		descText = new FlxText(descBorder.x, 64, descBorder.width, '');
+		descText.setFormat(Paths.font("vcr.ttf"), 24, FlxColor.WHITE, LEFT);
 		add(descText);
 		descBorder.scrollFactor.set();
+		descNameText.scrollFactor.set();
 		descText.scrollFactor.set();
 	}
 
@@ -106,7 +112,7 @@ class PreferencesMenu extends ui.OptionsState.Page
 			preferenceCheck('auto-pause', false);
 			preferenceCheck('mem-counter', true);
 			preferenceCheck('debug-counters', false);
-			preferenceCheck('ghost-tapping', false);
+			preferenceCheck('ghost-tapping', true);
 			preferenceCheck('master-volume', 1);
 		}
 		#if muted
@@ -199,7 +205,8 @@ class PreferencesMenu extends ui.OptionsState.Page
 		{
 			if (items.selectedItem == daItem) {
 				daItem.x = 150;
-				descText.text = daItem.label.text + '\n\n' + descs[daItem.ID];
+				descNameText.text = daItem.label.text;
+				descText.text = descs[daItem.ID];
 			}
 			else
 				daItem.x = 120;

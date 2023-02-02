@@ -1,0 +1,8 @@
+There is very little usage of JSONs here, most of the stuff is done via HScript.
+
+valid dirs:
+
+data/
+songs/
+scripts/
+stateScripts/

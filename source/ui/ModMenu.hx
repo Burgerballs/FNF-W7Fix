@@ -1,157 +1,200 @@
 package ui;
 
+import ui.PreferencesMenu.CheckboxThingie;
+import flixel.FlxObject;
+import flixel.FlxCamera;
+#if desktop
+import Discord.DiscordClient;
+#end
+import flash.text.TextField;
 import flixel.FlxG;
+import flixel.FlxSprite;
+import flixel.addons.display.FlxGridOverlay;
+import flixel.addons.transition.FlxTransitionableState;
+import flixel.addons.ui.FlxButtonPlus;
 import flixel.group.FlxGroup.FlxTypedGroup;
+import flixel.math.FlxMath;
 import flixel.text.FlxText;
 import flixel.util.FlxColor;
-#if cpp
-import polymod.Polymod;
+import flixel.tweens.FlxTween;
+import lime.utils.Assets;
+import flixel.system.FlxSound;
+import openfl.utils.Assets as OpenFlAssets;
+import sys.io.File;
 import sys.FileSystem;
-#end
+import haxe.Json;
+import haxe.format.JsonParser;
+import openfl.display.BitmapData;
+import flash.geom.Rectangle;
+import flixel.ui.FlxButton;
+import flixel.FlxBasic;
+import sys.io.File;
+import ui.AtlasText.AtlasFont;
+import ui.TextMenuList.TextMenuItem;
 
 class ModMenu extends ui.OptionsState.Page
 {
-	var grpMods:FlxTypedGroup<ModMenuItem>;
-	var enabledMods:Array<String> = [];
-	var modFolders:Array<String> = [];
+	var modsList:Array<Dynamic> = [];
+
+	var checkboxes:Array<CheckboxThingie> = [];
 
 	var curSelected:Int = 0;
+
+	var items:TextMenuList;
+
+	var noMods:FlxText;
+	var statusText:FlxText;
+	var hasNoMods:Bool = true;
+
+	var menuCamera:FlxCamera;
+	var camFollow:FlxObject;
 
 	public function new():Void
 	{
 		super();
 
-		grpMods = new FlxTypedGroup<ModMenuItem>();
-		add(grpMods);
+		menuCamera = new SwagCamera();
+		FlxG.cameras.add(menuCamera, false);
+		menuCamera.bgColor = 0x0;
+		camera = menuCamera;
 
-		refreshModList();
-	}
+		add(items = new TextMenuList());
 
-	override function update(elapsed:Float)
-	{
-		if (FlxG.keys.justPressed.R)
-			refreshModList();
+		hasNoMods = (!FileSystem.exists('modsList.txt'));
 
-		selections();
+		noMods = new FlxText(0,100, 1280, 'There seems to be no mods here. \n Press BACK to exit and install a mod!');
+		if(FlxG.random.bool(0.1)) noMods.text += '\nDUMBASS!!!.'; //diabolical
+		noMods.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER);
+		add(noMods);
+		noMods.scrollFactor.set();
+		noMods.visible = hasNoMods;
 
-		if (controls.UI_UP_P)
-			selections(-1);
-		if (controls.UI_DOWN_P)
-			selections(1);
-
-		if (FlxG.keys.justPressed.SPACE)
-			grpMods.members[curSelected].modEnabled = !grpMods.members[curSelected].modEnabled;
-
-		if (FlxG.keys.justPressed.I && curSelected != 0)
+		var path:String = 'modsList.txt';
+		if(FileSystem.exists(path))
 		{
-			var oldOne = grpMods.members[curSelected - 1];
-			grpMods.members[curSelected - 1] = grpMods.members[curSelected];
-			grpMods.members[curSelected] = oldOne;
-			selections(-1);
-		}
-
-		if (FlxG.keys.justPressed.K && curSelected < grpMods.members.length - 1)
-		{
-			var oldOne = grpMods.members[curSelected + 1];
-			grpMods.members[curSelected + 1] = grpMods.members[curSelected];
-			grpMods.members[curSelected] = oldOne;
-			selections(1);
-		}
-
-		super.update(elapsed);
-	}
-
-	private function selections(change:Int = 0):Void
-	{
-		curSelected += change;
-
-		if (curSelected >= modFolders.length)
-			curSelected = 0;
-		if (curSelected < 0)
-			curSelected = modFolders.length - 1;
-
-		for (txt in 0...grpMods.length)
-		{
-			if (txt == curSelected)
+			var leMods:Array<String> = CoolUtil.coolTextFile(path);
+			for (i in 0...leMods.length)
 			{
-				grpMods.members[txt].color = FlxColor.YELLOW;
+				if(leMods.length > 1 && leMods[0].length > 0) {
+					var modSplit:Array<String> = leMods[i].split('|');
+					if(!Paths.ignoreModFolders.contains(modSplit[0].toLowerCase()))
+					{
+						addToModsList([modSplit[0], (modSplit[1] == '1')]);
+						//trace(modSplit[1]);
+					}
+				}
 			}
-			else
-				grpMods.members[txt].color = FlxColor.WHITE;
 		}
 
-		organizeByY();
-	}
-
-	inline static var MOD_PATH = "./mods";
-	private function refreshModList():Void
-	{
-		while (grpMods.members.length > 0)
-		{
-			grpMods.remove(grpMods.members[0], true);
+		// FIND MOD FOLDERS
+		var boolshit = true;
+		if (FileSystem.exists("modsList.txt")){
+			for (folder in Paths.getModDirectories())
+			{
+				if(!Paths.ignoreModFolders.contains(folder))
+				{
+					addToModsList([folder, true]); //i like it false by default. -bb //Well, i like it True! -Shadow
+				}
+			}
 		}
-
-		#if desktop
-		var modList = [];
-		modFolders = [];
-		
-		trace("mods path:" + FileSystem.absolutePath(MOD_PATH));
-		if (!FileSystem.exists(MOD_PATH))
-		{
-			FlxG.log.warn("missing mods folder, expected: " + FileSystem.absolutePath(MOD_PATH));
-			return;
+		if (!hasNoMods) {
+			for (i in 0 ... modsList.length) {
+				var isEnabled = (modsList[i][1] == 1);
+				createMod(modsList[i][0], isEnabled);
+			}
 		}
-		
-		for (file in FileSystem.readDirectory(MOD_PATH))
-		{
-			if (FileSystem.isDirectory(MOD_PATH + file))
-				modFolders.push(file);
+		camFollow = new FlxObject(FlxG.width / 2, 0, 140, 70);
+		if (modsList == [] && !hasNoMods) {
+			noMods.visible = true;
+			noMods.text = 'There seems to be no mods within your /mods directory!\nInstall some mods!!';
 		}
-
-		enabledMods = [];
-
-		modList = Polymod.scan(MOD_PATH);
-
-		trace(modList);
-
-		var loopNum:Int = 0;
-		for (i in modFolders)
-		{
-			var txt:ModMenuItem = new ModMenuItem(0, 10 + (40 * loopNum), 0, i, 32);
-			txt.text = i;
-			grpMods.add(txt);
-
-			loopNum++;
-		}
-		#end
-	}
-
-	private function organizeByY():Void
-	{
-		for (i in 0...grpMods.length)
-		{
-			grpMods.members[i].y = 10 + (40 * i);
-		}
-	}
-}
-
-class ModMenuItem extends FlxText
-{
-	public var modEnabled:Bool = false;
-	public var daMod:String;
-
-	public function new(x:Float, y:Float, w:Float, str:String, size:Int)
-	{
-		super(x, y, w, str, size);
+		saveTxt();
 	}
 
 	override function update(elapsed:Float)
-	{
-		if (modEnabled)
-			alpha = 1;
-		else
-			alpha = 0.5;
+		{
+			super.update(elapsed);
+	
+			// menuCamera.followLerp = CoolUtil.camLerpShit(0.05);
+	
+			items.forEach(function(daItem:TextMenuItem)
+			{
+				if (items.selectedItem == daItem) {
+					daItem.x = 150;
+					// descNameText.text = daItem.label.text;
+					// descText.text = descs[daItem.ID];
+				}
+				else
+					daItem.x = 120;
+			});
+		}
 
-		super.update(elapsed);
+
+	private function createMod(prefName:String, prefValue:Dynamic):Void
+	{
+		items.createItem(220, (120 * items.length) + 30, prefName, AtlasFont.Default, function()
+		{
+			toggle(prefName);
+		});
+
+		switch (Type.typeof(prefValue).getName())
+		{
+			case 'TBool':
+				createCheckbox(prefValue);
+
+			default:
+				trace('swag');
+		}
+
+		trace(Type.typeof(prefValue).getName());
+	}
+
+	private function toggle(prefName:String)
+	{
+		items.forEach(function(daItem:TextMenuItem) {
+			if (items.selectedItem == daItem) {
+				if (modsList[daItem.ID] != null) {
+					var flippo = !modsList[daItem.ID][1];
+					modsList[daItem.ID][1] = flippo;
+					checkboxes[items.selectedIndex].daValue = flippo;
+					saveTxt();
+				}
+			}
+		});
+	}
+
+	function createCheckbox(prefValue:Dynamic)
+	{
+		var checkbox:CheckboxThingie = new CheckboxThingie(0, 120 * (items.length - 1), prefValue);
+		checkboxes.push(checkbox);
+		add(checkbox);
+	}
+
+	function saveTxt() {
+		var fileStr:String = '';
+		for (values in modsList)
+		{
+			if(fileStr.length > 0) fileStr += '\n';
+			fileStr += values[0] + '|' + (values[1] ? '1' : '0');
+		}
+
+		var path:String = 'modsList.txt';
+		File.saveContent(path, fileStr);
+		Paths.pushGlobalMods();
+	}
+
+	
+
+	function addToModsList(values:Array<Dynamic>)
+	{
+		for (i in 0...modsList.length)
+		{
+			if(modsList[i][0] == values[0])
+			{
+				//trace(modsList[i][0], values[0]);
+				return;
+			}
+		}
+		modsList.push(values);
 	}
 }

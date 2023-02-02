@@ -11,6 +11,8 @@ import ui.PreferencesMenu;
 
 class GameOverSubstate extends MusicBeatSubstate
 {
+	public static var instance = GameOverSubstate;
+
 	var bf:Boyfriend;
 	var camFollow:FlxObject;
 
