@@ -1,8 +1,8 @@
 # W7Fix
 
-This is a version of the Week 7 release Funkin' that aims to improve the game while keeping the original feel
+This is a version of the Week 7 release of Funkin' that aims to improve the game while keeping the original feel.
 
-
+This "original feel" means that the HUD remains unaltered without the usage of scripts, and I aim to only make changes to the core gameplay as optional settings instead of actual parts of the game itself.
 
 Anyways let the original description commence!
 
