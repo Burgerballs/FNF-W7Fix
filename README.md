@@ -4,7 +4,7 @@ This is a version of the Week 7 release of Funkin' that aims to improve the game
 
 This "original feel" means that the HUD remains unaltered without the usage of scripts, and I aim to only make changes to the core gameplay as optional settings instead of actual parts of the game itself.
 
-![silly](https://github.com/Burgerballs/FNF-W7Fix/blob/main/2023-02-04_23-47-36_online-video-cutter.com.mp4?raw=true)
+![silly](https://user-images.githubusercontent.com/107233412/216823593-ca375483-2b2f-472d-b86c-485c50880f17.mp4)
 
 Anyways let the original description commence!
 
