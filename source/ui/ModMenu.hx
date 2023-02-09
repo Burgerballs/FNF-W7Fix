@@ -35,6 +35,7 @@ import ui.TextMenuList.TextMenuItem;
 class ModMenu extends ui.OptionsState.Page
 {
 	var modsList:Array<Dynamic> = [];
+	var mods:Array<ModMetadata> = [];
 
 	var checkboxes:Array<CheckboxThingie> = [];
 
@@ -48,6 +49,8 @@ class ModMenu extends ui.OptionsState.Page
 
 	var menuCamera:FlxCamera;
 	var camFollow:FlxObject;
+	var descNameText:FlxText;
+	var descText:FlxText;
 
 	public function new():Void
 	{
@@ -68,6 +71,9 @@ class ModMenu extends ui.OptionsState.Page
 		add(noMods);
 		noMods.scrollFactor.set();
 		noMods.visible = hasNoMods;
+
+		if (!hasNoMods)
+			createMod('Mods', false, false);
 
 		var path:String = 'modsList.txt';
 		if(FileSystem.exists(path))
@@ -100,13 +106,42 @@ class ModMenu extends ui.OptionsState.Page
 		if (!hasNoMods) {
 			for (i in 0 ... modsList.length) {
 				var isEnabled = (modsList[i][1] == 1);
-				createMod(modsList[i][0], isEnabled);
+				createMod(modsList[i][0], isEnabled, true);
 			}
 		}
 		camFollow = new FlxObject(FlxG.width / 2, 0, 140, 70);
-		if (modsList == [] && !hasNoMods) {
-			noMods.visible = true;
-			noMods.text = 'There seems to be no mods within your /mods directory!\nInstall some mods!!';
+
+		if (enabled && !hasNoMods) {
+			camFollow = new FlxObject(FlxG.width / 2, 0, 140, 70);
+			if (items != null)
+				camFollow.y = items.selectedItem.y;
+	
+			menuCamera.follow(camFollow, null, 0.06);
+			var margin = 160;
+			menuCamera.deadzone.set(0, margin, menuCamera.width, 40);
+			menuCamera.minScrollY = -100;
+	
+			items.onChange.add(function(selected)
+			{
+				camFollow.y = selected.y;
+			});
+			var descBorder = new FlxSprite(0,0).makeGraphic(400, 720, 0x99000000);
+			add(descBorder);
+			var descBottom = new FlxSprite(0,720 - 18).makeGraphic(400, 20, 0xFF000000);
+			add(descBottom);
+			descBorder.x = FlxG.width - descBorder.width;
+			descBottom.x = descBorder.x;
+			descNameText = new FlxText(descBorder.x, 0, descBorder.width, '');
+			descNameText.setFormat(Paths.font("vcr.ttf"), 36, FlxColor.WHITE, LEFT);
+			add(descNameText);
+	
+			descText = new FlxText(descBorder.x, 64, descBorder.width, '');
+			descText.setFormat(Paths.font("vcr.ttf"), 24, FlxColor.WHITE, LEFT);
+			add(descText);
+			descBorder.scrollFactor.set();
+			descBottom.scrollFactor.set();
+			descNameText.scrollFactor.set();
+			descText.scrollFactor.set();
 		}
 		saveTxt();
 	}
@@ -119,28 +154,43 @@ class ModMenu extends ui.OptionsState.Page
 	
 			items.forEach(function(daItem:TextMenuItem)
 			{
-				if (items.selectedItem == daItem) {
+				if (items.selectedItem == daItem && daItem.ID != 0) {
 					daItem.x = 150;
+					descNameText.text = mods[daItem.ID - 1].name;
+					descText.text = mods[daItem.ID - 1].description;
 					// descNameText.text = daItem.label.text;
 					// descText.text = descs[daItem.ID];
 				}
 				else
-					daItem.x = 120;
+					if (daItem.ID != 0)
+						daItem.x = 120;
+					else {
+						descNameText.text = 'Mods';
+						descText.text = 'Scroll down to view mod descriptions, if you can only see this in the menu, try adding more mods into to the /mods folder!!!';
+						daItem.x = 40;
+					}
 			});
 		}
 
 
-	private function createMod(prefName:String, prefValue:Dynamic):Void
+	private function createMod(prefName:String, prefValue:Dynamic, ?changeable:Bool = true):Void
 	{
-		items.createItem(220, (120 * items.length) + 30, prefName, AtlasFont.Default, function()
+		if (changeable) {
+			var newMod:ModMetadata = new ModMetadata(prefName);
+			mods.push(newMod);
+		}
+
+		items.createItem(0, (120 * items.length) + 30, (changeable ? mods[mods.length-1].name : prefName), (changeable ? AtlasFont.Default : AtlasFont.Bold), function()
 		{
-			toggle(prefName);
+			if (changeable)
+				toggle(prefName);
 		});
 
 		switch (Type.typeof(prefValue).getName())
 		{
 			case 'TBool':
-				createCheckbox(prefValue);
+				if (changeable)
+					createCheckbox(prefValue);
 
 			default:
 				trace('swag');
@@ -153,10 +203,10 @@ class ModMenu extends ui.OptionsState.Page
 	{
 		items.forEach(function(daItem:TextMenuItem) {
 			if (items.selectedItem == daItem) {
-				if (modsList[daItem.ID] != null) {
-					var flippo = !modsList[daItem.ID][1];
-					modsList[daItem.ID][1] = flippo;
-					checkboxes[items.selectedIndex].daValue = flippo;
+				if (modsList[daItem.ID-1] != null) {
+					var flippo = !modsList[daItem.ID - 1][1];
+					modsList[daItem.ID - 1][1] = flippo;
+					checkboxes[items.selectedIndex - 1].daValue = flippo;
 					saveTxt();
 				}
 			}
@@ -175,7 +225,7 @@ class ModMenu extends ui.OptionsState.Page
 		for (values in modsList)
 		{
 			if(fileStr.length > 0) fileStr += '\n';
-			fileStr += values[0] + '|' + (values[1] ? '1' : '0');
+				fileStr += values[0] + '|' + (values[1] ? '1' : '0');
 		}
 
 		var path:String = 'modsList.txt';
@@ -196,5 +246,57 @@ class ModMenu extends ui.OptionsState.Page
 			}
 		}
 		modsList.push(values);
+	}
+}
+
+class ModMetadata
+{
+	public var folder:String;
+	public var name:String;
+	public var description:String;
+	public var color:FlxColor;
+	public var restart:Bool = false;//trust me. this is very important
+	public var alphabet:Alphabet;
+
+	public function new(folder:String)
+	{
+		this.folder = folder;
+		this.name = folder;
+		this.description = "No description provided.";
+
+		//Try loading json
+		var path = Paths.mods(folder + '/pack.json');
+		if(FileSystem.exists(path)) {
+			var rawJson:String = File.getContent(path);
+			if(rawJson != null && rawJson.length > 0) {
+				var stuff:Dynamic = Json.parse(rawJson);
+					//using reflects cuz for some odd reason my haxe hates the stuff.var shit
+					var description:String = Reflect.getProperty(stuff, "description");
+					var name:String = Reflect.getProperty(stuff, "name");
+					var restart:Bool = Reflect.getProperty(stuff, "restart");
+
+				if(name != null && name.length > 0)
+				{
+					this.name = name;
+				}
+				if(description != null && description.length > 0)
+				{
+					this.description = description;
+				}
+				if(name == 'Name')
+				{
+					this.name = folder;
+				}
+				if(description == 'Description')
+				{
+					this.description = "No description provided.";
+				}
+
+				if(restart == true)
+				{
+					this.restart = restart;
+				}
+			}
+		}
 	}
 }

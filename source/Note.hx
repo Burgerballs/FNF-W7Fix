@@ -15,6 +15,13 @@ using StringTools;
 import polymod.format.ParseRules.TargetSignatureElement;
 #end
 
+typedef Event = {
+	strumTime:Int,
+	event:String,
+	val1:String,
+	val2:String
+}
+
 class Note extends FlxSprite
 {
 	public var strumTime:Float = 0;
@@ -187,11 +194,12 @@ class Note extends FlxSprite
 						prevNote.animation.play('redhold');
 				}
 
-				prevNote.scale.y *= Conductor.stepCrochet / 100 * 1.5 * PlayState.SONG.speed;
+				prevNote.scale.y *= Conductor.stepCrochet / 100 * 1.5 * PlayState.instance.songSpeed;
 				prevNote.updateHitbox();
 				// prevNote.setGraphicSize();
 			}
 		}
+		moves = false;
 	}
 
 	public function updateColors():Void

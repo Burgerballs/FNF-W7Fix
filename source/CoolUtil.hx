@@ -1,5 +1,6 @@
 package;
 
+import sys.FileSystem;
 import flixel.FlxG;
 import flixel.graphics.FlxGraphic;
 import flixel.graphics.frames.FlxAtlasFrames;
@@ -17,12 +18,12 @@ class CoolUtil
 {
 	public static var difficultyArray:Array<String> = ['EASY', "NORMAL", "HARD"];
 
-	public static function difficultyString():String
+	public static inline function difficultyString():String
 	{
 		return difficultyArray[PlayState.storyDifficulty];
 	}
 
-	public static function coolTextFile(path:String):Array<String>
+	public static inline function coolTextFile(path:String):Array<String>
 	{
 		var daList:Array<String> = Assets.getText(path).trim().split('\n');
 
@@ -34,7 +35,7 @@ class CoolUtil
 		return daList;
 	}
 
-	public static function numberArray(max:Int, ?min = 0):Array<Int>
+	public static inline function numberArray(max:Int, ?min = 0):Array<Int>
 	{
 		var dumbArray:Array<Int> = [];
 		for (i in min...max)
@@ -51,9 +52,40 @@ class CoolUtil
 			Actually make and modify the scroll and lerp shit in it's own function
 			instead of solely relying on changing the lerp on the fly
 	 */
-	public static function camLerpShit(lerp:Float):Float
+	public static inline function camLerpShit(lerp:Float):Float
 	{
 		return lerp * (FlxG.elapsed / (1 / 60));
+	}
+
+	
+	public static inline function coolDirectory(file:String):Array<String>
+	{
+		if (!file.endsWith('/'))
+			file = '$file/';
+
+		var path:String = Paths.mods(file);
+		if (!FileSystem.exists(path))
+			path = Paths.getPath(file);
+
+		var absolutePath:String = FileSystem.absolutePath(path);
+		var directory:Array<String> = FileSystem.readDirectory(absolutePath);
+
+		if (directory != null)
+		{
+			var dirCopy:Array<String> = directory.copy();
+
+			for (i in dirCopy)
+			{
+				var index:Int = dirCopy.indexOf(i);
+				var file:String = '$path$i';
+				dirCopy.remove(i);
+				dirCopy.insert(index, file);
+			}
+
+			directory = dirCopy;
+		}
+
+		return if (directory != null) directory else [];
 	}
 
 	/*

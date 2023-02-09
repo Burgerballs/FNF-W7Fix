@@ -1,5 +1,6 @@
 package;
 
+import sys.FileSystem;
 import Conductor.BPMChangeEvent;
 import Section.SwagSection;
 import Song.SwagSong;
@@ -52,6 +53,7 @@ class ChartingState extends MusicBeatState
 
 	var strumLine:FlxSprite;
 	var curSong:String = 'Dadbattle';
+	var stages:Array<String> = ['stage', 'spooky', 'philly', 'limo', 'mall', 'mallEvil', 'school', 'schoolEvil', 'tank'];
 	var amountSteps:Int = 0;
 	var bullshitUI:FlxGroup;
 
@@ -80,6 +82,14 @@ class ChartingState extends MusicBeatState
 
 	var leftIcon:HealthIcon;
 	var rightIcon:HealthIcon;
+
+	var suffix:String = '';
+
+	public function new(?isErect) {
+		super();
+		if (isErect)
+			suffix = '-erect';
+	}
 
 	override function create()
 	{
@@ -120,6 +130,7 @@ class ChartingState extends MusicBeatState
 				player1: 'bf',
 				player2: 'dad',
 				speed: 1,
+				stage: 'stage',
 				validScore: false
 			};
 		}
@@ -199,6 +210,18 @@ class ChartingState extends MusicBeatState
 			FlxG.sound.music.volume = vol;
 		};
 
+		var check_mute_voice = new FlxUICheckBox(10, 240, null, null, "Mute Voices (in editor)", 100);
+		check_mute_voice.checked = false;
+		check_mute_voice.callback = function()
+		{
+			var vol:Float = 1;
+
+			if (check_mute_voice.checked)
+				vol = 0;
+
+			vocals.volume = vol;
+		};
+
 		var saveButton:FlxButton = new FlxButton(110, 8, "Save", function()
 		{
 			saveLevel();
@@ -231,7 +254,38 @@ class ChartingState extends MusicBeatState
 			_song.player1 = characters[Std.parseInt(character)];
 			updateHeads();
 		});
-		player1DropDown.selectedLabel = _song.player1;
+
+		var tempMap:Map<String, Bool> = new Map<String, Bool>();
+		#if MODS_ALLOWED
+		var directories:Array<String> = [Paths.mods('stages/'), Paths.mods(Paths.currentModDirectory + '/stages/'), Paths.getPreloadPath('stages/')];
+		for(mod in Paths.getGlobalMods())
+			directories.push(Paths.mods(mod + '/stages/'));
+		#else
+		var directories:Array<String> = [Paths.getPreloadPath('stages/')];
+		#end
+		#if MODS_ALLOWED
+		for (i in 0...directories.length) {
+			var directory:String = directories[i];
+			if(FileSystem.exists(directory)) {
+				for (file in FileSystem.readDirectory(directory)) {
+					var path = haxe.io.Path.join([directory, file]);
+					if (!FileSystem.isDirectory(path) && file.endsWith('.hx')) {
+						var stageToCheck:String = file.substr(0, file.length - 5);
+						if(!tempMap.exists(stageToCheck)) {
+							tempMap.set(stageToCheck, true);
+							stages.push(stageToCheck);
+						}
+					}
+				}
+			}
+		}
+		#end
+
+		var stageDropDown = new FlxUIDropDownMenu(10, 280, FlxUIDropDownMenu.makeStrIdLabelArray(stages, true), function(stage:String)
+		{
+			_song.stage = stages[Std.parseInt(stage)];
+		});
+		stageDropDown.selectedLabel = _song.stage;
 
 		var player2DropDown = new FlxUIDropDownMenu(140, 100, FlxUIDropDownMenu.makeStrIdLabelArray(characters, true), function(character:String)
 		{
@@ -246,6 +300,7 @@ class ChartingState extends MusicBeatState
 
 		tab_group_song.add(check_voices);
 		tab_group_song.add(check_mute_inst);
+		tab_group_song.add(check_mute_voice);
 		tab_group_song.add(saveButton);
 		tab_group_song.add(reloadSong);
 		tab_group_song.add(reloadSongJson);
@@ -253,6 +308,7 @@ class ChartingState extends MusicBeatState
 		tab_group_song.add(stepperBPM);
 		tab_group_song.add(stepperSpeed);
 		tab_group_song.add(player1DropDown);
+		tab_group_song.add(stageDropDown);
 		tab_group_song.add(player2DropDown);
 
 		UI_box.addGroup(tab_group_song);
@@ -326,6 +382,8 @@ class ChartingState extends MusicBeatState
 
 	var stepperSusLength:FlxUINumericStepper;
 
+	var check_noteAltAnim:FlxUICheckBox;
+
 	function addNoteUI():Void
 	{
 		var tab_group_note = new FlxUI(null, UI_box);
@@ -335,10 +393,14 @@ class ChartingState extends MusicBeatState
 		stepperSusLength.value = 0;
 		stepperSusLength.name = 'note_susLength';
 
+		check_noteAltAnim = new FlxUICheckBox(10, 100, null, null, "Alt Animation (for note)", 100);
+		check_noteAltAnim.name = 'check_noteAltAnim';
+
 		var applyLength:FlxButton = new FlxButton(100, 10, 'Apply');
 
 		tab_group_note.add(stepperSusLength);
 		tab_group_note.add(applyLength);
+		tab_group_note.add(check_noteAltAnim);
 
 		UI_box.addGroup(tab_group_note);
 	}
@@ -351,7 +413,7 @@ class ChartingState extends MusicBeatState
 			// vocals.stop();
 		}
 
-		FlxG.sound.playMusic(Paths.inst(daSong), 0.6);
+		FlxG.sound.playMusic(Paths.inst(daSong, suffix), 0.6);
 
 		// WONT WORK FOR TUTORIAL OR TEST SONG!!! REDO LATER
 		vocals = new FlxSound().loadEmbedded(Paths.voices(daSong));
@@ -407,6 +469,8 @@ class ChartingState extends MusicBeatState
 					FlxG.log.add('changed bpm shit');
 				case "Alt Animation":
 					_song.notes[curSection].altAnim = check.checked;
+				case "Alt Animation (for note)":
+					curSelectedNote[3] = check.checked;
 			}
 		}
 		else if (id == FlxUINumericStepper.CHANGE_EVENT && (sender is FlxUINumericStepper))
@@ -675,6 +739,12 @@ class ChartingState extends MusicBeatState
 			+ curBeat
 			+ "\nStep: "
 			+ curStep;
+		curRenderedNotes.forEachAlive(function(note:Note) {
+			note.alpha = 1;
+			if(note.strumTime <= Conductor.songPosition) {
+				note.alpha = 0.4;
+			}
+		});
 		super.update(elapsed);
 	}
 
@@ -705,6 +775,7 @@ class ChartingState extends MusicBeatState
 			}
 			else
 				curSelectedNote[3] = true;
+			updateNoteUI();
 		}
 	}
 
@@ -827,8 +898,10 @@ class ChartingState extends MusicBeatState
 
 	function updateNoteUI():Void
 	{
-		if (curSelectedNote != null)
+		if (curSelectedNote != null) {
 			stepperSusLength.value = curSelectedNote[2];
+			check_noteAltAnim.checked = curSelectedNote[3];
+		}
 	}
 
 	function updateGrid():Void

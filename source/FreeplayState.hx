@@ -251,9 +251,17 @@ class FreeplayState extends MusicBeatState
 	{
 		curDifficulty += change;
 
+		for (i in 0...erectList.length) {
+			if (songs[curSelected].songName == erectList[i]) {
+				CoolUtil.difficultyArray = ['EASY', "NORMAL", "HARD", "ERECT"];
+				break;
+			} else
+				CoolUtil.difficultyArray = ['EASY', "NORMAL", "HARD"];
+		}
+
 		if (curDifficulty < 0)
-			curDifficulty = 2;
-		if (curDifficulty > 2)
+			curDifficulty = CoolUtil.difficultyArray.length-1;
+		if (curDifficulty > CoolUtil.difficultyArray.length-1)
 			curDifficulty = 0;
 
 		intendedScore = Highscore.getScore(songs[curSelected].songName, curDifficulty);
@@ -263,6 +271,12 @@ class FreeplayState extends MusicBeatState
 		diffText.text = "< " + CoolUtil.difficultyString() + " >";
 		positionHighscore();
 	}
+
+	var erectList:Array<String> = [
+		'Bopeebo',
+		'Dadbattle',
+		'South'
+	];
 
 	function changeSelection(change:Int = 0)
 	{
@@ -310,6 +324,13 @@ class FreeplayState extends MusicBeatState
 				// item.setGraphicSize(Std.int(item.width));
 			}
 		}
+
+		for (i in 0...erectList.length)
+			if (songs[curSelected].songName == erectList[i]) {
+				CoolUtil.difficultyArray = ['EASY', "NORMAL", "HARD", "ERECT"];
+				break;
+			} else
+				CoolUtil.difficultyArray = ['EASY', "NORMAL", "HARD"];
 	}
 
 	function positionHighscore()

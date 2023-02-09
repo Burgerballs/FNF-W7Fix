@@ -14,6 +14,7 @@ import ui.TextMenuList.TextMenuItem;
 class PreferencesMenu extends ui.OptionsState.Page
 {
 	public static var preferences:Map<String, Dynamic> = new Map();
+	public static var isFloatMap:Map<String, Bool> = new Map();
 
 	var items:TextMenuList;
 
@@ -22,6 +23,8 @@ class PreferencesMenu extends ui.OptionsState.Page
 	var camFollow:FlxObject;
 	var descNameText:FlxText;
 	var descText:FlxText;
+	var coolFloatText:FlxText;
+
 	var descs:Array<String> = 
 	[
 		"Makes it so your mom doesn't kick your ass.",
@@ -30,10 +33,12 @@ class PreferencesMenu extends ui.OptionsState.Page
 		'Changes if the camera zooms to the beat of a song.',
 		'If checked it removes the jagged edges of sprites, at the cost of preformance.',
 		'When checked you can press the keys without it being counted as missing',
+		'When checked the score text shows the accuracy and misses, along with a special rank.',
 		'What do you expect it to do? lol',
 		'What do you expect it to do? lol',
 		'What do you expect it to do? lol',
-		'What do you expect it to do? lol'
+		'What do you expect it to do? lol',
+		'Changes the Scroll Speed to the set number, if the number is 1, the scroll speed will be chart dependant.'
 	];
 
 	public function new()
@@ -52,10 +57,12 @@ class PreferencesMenu extends ui.OptionsState.Page
 		createPrefItem('Camera Zooming on Beat', 'camera-zoom', true);
 		createPrefItem('Anti Aliasing', 'anti-aliasing', true);
 		createPrefItem('Ghost Tapping', 'ghost-tapping', true);
+		createPrefItem('Complex HUD Text', 'hudtext', false);
 		createPrefItem('FPS Counter', 'fps-counter', true);
 		createPrefItem('Memory Counter', 'mem-counter', true);
 		createPrefItem('Counters for Debugging', 'debug-counters', true);
 		createPrefItem('Auto Pause', 'auto-pause', false);
+		//createPrefItem('Scroll Speed', 'scrspd', 1);
 
 		camFollow = new FlxObject(FlxG.width / 2, 0, 140, 70);
 		if (items != null)
@@ -81,9 +88,15 @@ class PreferencesMenu extends ui.OptionsState.Page
 		descText = new FlxText(descBorder.x, 64, descBorder.width, '');
 		descText.setFormat(Paths.font("vcr.ttf"), 24, FlxColor.WHITE, LEFT);
 		add(descText);
+
+		// coolFloatText = new FlxText(descBorder.x, 120, descBorder.width, '< 1 >');
+		// coolFloatText.setFormat(Paths.font("vcr.ttf"), 24, FlxColor.WHITE, CENTER);
+		// add(coolFloatText);
+
 		descBorder.scrollFactor.set();
 		descNameText.scrollFactor.set();
 		descText.scrollFactor.set();
+		// coolFloatText.scrollFactor.set();
 	}
 
 	public static function getPref(pref:String):Dynamic
@@ -109,11 +122,13 @@ class PreferencesMenu extends ui.OptionsState.Page
 			preferenceCheck('flashing-menu', true);
 			preferenceCheck('camera-zoom', true);
 			preferenceCheck('fps-counter', true);
+			preferenceCheck('hudtext', false);
 			preferenceCheck('auto-pause', false);
 			preferenceCheck('mem-counter', true);
 			preferenceCheck('debug-counters', false);
 			preferenceCheck('ghost-tapping', true);
 			preferenceCheck('master-volume', 1);
+			preferenceCheck('scrspd', 1);
 		}
 		#if muted
 		setPref('master-volume', 0);
@@ -136,7 +151,6 @@ class PreferencesMenu extends ui.OptionsState.Page
 			{
 				case 'TBool':
 					prefToggle(prefString);
-
 				default:
 					trace('swag');
 			}
@@ -146,7 +160,8 @@ class PreferencesMenu extends ui.OptionsState.Page
 		{
 			case 'TBool':
 				createCheckbox(prefString);
-
+			case 'TFloat':
+				isFloatMap.set(prefString, true);
 			default:
 				trace('swag');
 		}
@@ -209,7 +224,10 @@ class PreferencesMenu extends ui.OptionsState.Page
 				descText.text = descs[daItem.ID];
 			}
 			else
-				daItem.x = 120;
+				if (isFloatMap.get(daItem.label.text))
+					daItem.x = 20;
+				else
+					daItem.x = 120;
 		});
 	}
 

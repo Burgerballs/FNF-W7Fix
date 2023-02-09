@@ -21,6 +21,7 @@ class MenuTypedList<T:MenuItem> extends FlxTypedGroup<T>
 	public var enabled:Bool = true;
 	/**  */
 	public var wrapMode:WrapMode = Both;
+	public var canBeSelected:Bool = true;
 	
 	var byName = new Map<String, T>();
 	/** Set to true, internally to disable controls, without affecting vars like `enabled` */
@@ -89,7 +90,7 @@ class MenuTypedList<T:MenuItem> extends FlxTypedGroup<T>
 			case Rows   (num): navGrid(num, controls.UI_UP_P  , controls.UI_DOWN_P , wrapY, controls.UI_LEFT_P, controls.UI_RIGHT_P, wrapX);
 		}
 		
-		if (newIndex != selectedIndex)
+		if (newIndex != selectedIndex && canBeSelected)
 		{
 			FlxG.sound.play(Paths.sound('scrollMenu'));
 			selectItem(newIndex);

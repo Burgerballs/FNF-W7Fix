@@ -25,14 +25,17 @@ import openfl.Lib;
 
 // stole from https://github.com/TheWorldMachinima/FunkinCocoa/blob/main/source/FunkinScript.hx lol!!
 
-final class FunkinScript extends SScript
+final class FunkinHscript extends SScript
 {
-	override public function new(?scriptFile:String = "", ?preset:Bool = true, ?startExecute:Bool = true)
+	public var scriptName:String = null;
+	override public function new(?scriptFile:String = "", ?preset:Bool = true, ?startExecute:Bool = true, ?scriptName:String = null)
 	{
 		super(scriptFile, preset, false);
 
 		traces = false;
 		privateAccess = true;
+
+		this.scriptName = scriptName;
 		
 		execute();
 	}
@@ -41,13 +44,36 @@ final class FunkinScript extends SScript
 	{
 		super.preset();
 
+		set('Alphabet', Alphabet);
+		set('Application', Application);
+		set('Assets', Assets);
 		set('Boyfriend', Boyfriend);
 		set('Character', Character);
+		set('Conductor', Conductor);
+		set('FlxAngle', FlxAngle);
+		set('FlxBar', FlxBar);
+		set('FlxBasic', FlxBasic);
+		set('FlxCamera', FlxCamera);
+		set('FlxEase', FlxEase);
 		set('FlxG', FlxG);
+		set('FlxGroup', FlxGroup);
+		set('FlxMath', FlxMath);
+		set('FlxObject', FlxObject);
+		set('FlxSave', FlxSave);
+		set('FlxSound', FlxSound);
 		set('FlxSprite', FlxSprite);
+		set('FlxSpriteGroup', FlxSpriteGroup);
+		set('FlxText', FlxText);
+		set('FlxTextBorderStyle', FlxTextBorderStyle);
+		set('FlxTimer', FlxTimer);
+		set('FlxTween', FlxTween);
+		set('FlxTypedGroup', FlxTypedGroup);
+		set('FlxTypedSpriteGroup', FlxTypedSpriteGroup);
 		set('game', PlayState.instance);
 		set('GameOverSubstate', GameOverSubstate);
 		set('gameover', GameOverSubstate.instance);
+		set('InputFormatter', InputFormatter);
+		set('Lib', Lib);
 		set('Main', Main);
 		set('Note', Note);
 		set('Paths', Paths);

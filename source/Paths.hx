@@ -120,7 +120,7 @@ class Paths
 		currentLevel = name.toLowerCase();
 	}
 
-	public static function getPath(file:String, type:AssetType, ?library:Null<String> = null)
+	public static function getPath(file:String, ?type:AssetType, ?library:Null<String> = null)
 	{
 		if (library != null)
 			return getLibraryPath(file, library);
@@ -186,9 +186,9 @@ class Paths
 	{
 		return getPath('shaders/$key.vert', TEXT, library);
 	}
-	inline static public function lua(key:String, ?library:String)
+	inline static public function scripts(key:String, ?library:String)
 	{
-		return getPath('$key.lua', TEXT, library);
+		return getPath('$key.hx', TEXT, library);
 	}
 
 	static public function video(key:String)
@@ -230,12 +230,12 @@ class Paths
 		#end
 	}
 
-	inline static public function inst(song:String):Any
+	inline static public function inst(song:String, ?suffix = ''):Any
 	{
 		#if html5
-		return 'songs:assets/songs/${formatToSongPath(song)}/Inst.$SOUND_EXT';
+		return 'songs:assets/songs/${formatToSongPath(song)}/Inst$suffix.$SOUND_EXT';
 		#else
-		var songKey:String = '${formatToSongPath(song)}/Inst';
+		var songKey:String = '${formatToSongPath(song)}/Inst$suffix';
 		var inst = returnSound('songs', songKey);
 		return inst;
 		#end
